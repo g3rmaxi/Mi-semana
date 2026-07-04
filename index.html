@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#faf9f5">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Mi semana</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  :root {
+    --bg:#faf9f5; --card:#ffffff; --card2:#f5f3ec; --border:#e8e5dc; --hair:#eeebe2;
+    --text:#3d3a33; --muted:#a09c92; --faint:#cdc9be; --ok:#2FA981; --okbg:#e7f4ee;
+    --pill-bg:#FAEEDA; --pill-tx:#854F0B; --overlay:rgba(60,55,45,.35);
+  }
+  html[data-theme="dark"] {
+    --bg:#15171c; --card:#1c1f26; --card2:#22252d; --border:#2a2e37; --hair:#252932;
+    --text:#e8e9ee; --muted:#8b8fa0; --faint:#4a4e59; --ok:#5DCAA5; --okbg:#1d2a26;
+    --pill-bg:#2e2a1c; --pill-tx:#EFC375; --overlay:rgba(0,0,0,.55);
+  }
+  html { background: var(--bg); }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    max-width: 1120px; margin: 0 auto; padding: 18px 16px 100px;
+    font-size: 15px; line-height: 1.45;
+  }
+  .serif { font-family: Georgia, "Times New Roman", serif; font-weight: 400; }
+  h1.serif { font-size: 25px; margin: 0; }
+  .kicker { font-size: 11px; letter-spacing: 1.5px; color: var(--muted); text-transform: uppercase; }
+  .sub { font-size: 12px; color: var(--muted); }
+  .lnk { font-size: 12px; color: var(--muted); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+  .lnk:hover { color: var(--text); }
+
+  header { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+  .topnav { display: none; gap: 4px; }
+  .topnav button, #tabs button { background: none; border: none; font-family: inherit; cursor: pointer; color: var(--muted); }
+  .topnav button { font-size: 14px; padding: 8px 14px; border-radius: 99px; }
+  .topnav button.on { background: var(--card); color: var(--text); font-weight: 600; border: 1px solid var(--border); }
+  @media (min-width: 900px) {
+    .topnav { display: flex; }
+    #tabs { display: none !important; }
+    body { padding-bottom: 90px; }
+  }
+
+  .panel { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; margin-bottom: 14px; }
+  .panel-h { font-size: 11px; letter-spacing: 1.2px; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .cols { display: grid; gap: 0; }
+  @media (min-width: 900px) { .cols { grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; } }
+  .cols2 { display: grid; gap: 0; }
+  @media (min-width: 900px) { .cols2 { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px; } }
+
+  .item { display: flex; align-items: flex-start; gap: 9px; padding: 7px 0; border-radius: 8px; }
+  .item:hover { background: var(--card2); }
+  .bar { width: 3px; align-self: stretch; border-radius: 2px; min-height: 24px; flex: none; }
+  .chk { width: 19px; height: 19px; border: 1.5px solid var(--faint); border-radius: 50%; flex: none; margin-top: 1px; cursor: pointer; position: relative; }
+  .chk.on { border-color: transparent; background: var(--ok); }
+  .chk.on::after { content: "✓"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #fff; }
+  .body { flex: 1; min-width: 0; cursor: pointer; }
+  .body .t { font-size: 14.5px; word-wrap: break-word; }
+  .body .m { font-size: 11.5px; color: var(--muted); }
+  .done .t { color: var(--faint); text-decoration: line-through; }
+  .done .m { color: var(--faint); }
+  .timecol { font-size: 12px; color: var(--muted); min-width: 40px; flex: none; margin-top: 3px; font-variant-numeric: tabular-nums; }
+  .datebadge { font-size: 11px; color: var(--muted); min-width: 46px; flex: none; margin-top: 3px; }
+  .empty { color: var(--muted); font-size: 13px; font-style: italic; padding: 4px 0; }
+  .pill { display: inline-block; font-size: 12px; padding: 3px 10px; border-radius: 99px; background: var(--pill-bg); color: var(--pill-tx); margin: 4px 0; }
+  .hr { border: 0; border-top: 1px solid var(--hair); margin: 6px 0; }
+  .month-h { font-family: Georgia, serif; font-size: 15px; margin: 14px 0 2px; }
+  .calgrid { display: grid; grid-template-columns: repeat(7,1fr); gap: 4px; text-align: center; }
+  .chd { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; padding-bottom: 2px; }
+  .cday { border: 1px solid var(--hair); border-radius: 8px; padding: 4px 2px 5px; cursor: pointer; min-height: 40px; }
+  .cday:hover { border-color: var(--muted); }
+  .cday span { font-size: 12px; }
+  .cday.ctoday { border-color: var(--ok); font-weight: 600; }
+  .cdots { display: flex; gap: 2px; justify-content: center; margin-top: 3px; flex-wrap: wrap; }
+  .cdot { width: 5px; height: 5px; border-radius: 50%; }
+
+  .dots { display: inline-flex; gap: 4px; align-items: center; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; border: 1px solid var(--faint); }
+  .dot.on { border-color: transparent; }
+  .dot.today { box-shadow: 0 0 0 2px var(--okbg); }
+
+  .daycard { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 10px 12px; }
+  .daycard.today { border-color: var(--ok); }
+  .daycard h3 { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .daycard h3 span { color: var(--muted); font-weight: 400; font-size: 11.5px; }
+  .semgrid { display: grid; gap: 10px; }
+  @media (min-width: 900px) { .semgrid { grid-template-columns: repeat(auto-fill, minmax(225px, 1fr)); } }
+  .weeknav { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .weeknav button { background: var(--card); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 15px; min-width: 34px; height: 30px; cursor: pointer; font-family: inherit; }
+  .weeknav .lbl { font-size: 13px; color: var(--muted); }
+
+  input.inline { border: none; border-bottom: 1px dashed var(--faint); background: transparent; font-size: 13.5px; color: var(--text); outline: none; width: 100%; padding: 3px 0; font-family: inherit; }
+  input.inline::placeholder { color: var(--faint); font-style: italic; }
+  input.filter { width: 100%; border: 1px solid var(--border); background: var(--card); border-radius: 10px; padding: 8px 12px; font-size: 14px; color: var(--text); outline: none; font-family: inherit; margin-bottom: 10px; }
+  input.filter::placeholder { color: var(--faint); }
+
+  #toast { position: fixed; bottom: 74px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); font-size: 13px; padding: 8px 16px; border-radius: 99px; opacity: 0; transition: opacity .25s; z-index: 60; display: flex; gap: 12px; align-items: center; pointer-events: none; white-space: nowrap; }
+  #toast.show { opacity: 1; pointer-events: auto; }
+  #toast .undo { text-decoration: underline; cursor: pointer; font-weight: 600; }
+
+  #quickbar { display: none; position: fixed; bottom: 58px; left: 50%; transform: translateX(-50%); width: 100%; max-width: 640px; padding: 8px 14px; z-index: 20; }
+  @media (min-width: 900px) { #quickbar { display: block; bottom: 14px; } }
+  #quickbar .row { display: flex; gap: 8px; background: var(--bg); border-radius: 14px; }
+  #qinput { flex: 1; border: 1px solid var(--border); background: var(--card); border-radius: 12px; padding: 10px 14px; font-size: 15px; color: var(--text); outline: none; font-family: inherit; box-shadow: 0 4px 14px var(--overlay); }
+  #qinput::placeholder { color: var(--faint); }
+  #qadd { border: none; background: var(--text); color: var(--bg); border-radius: 12px; width: 44px; font-size: 20px; cursor: pointer; }
+
+  #tabs { position: fixed; bottom: 0; left: 0; right: 0; display: flex; background: var(--bg); border-top: 1px solid var(--hair); z-index: 20; padding-bottom: env(safe-area-inset-bottom); }
+  #tabs button { flex: 1; padding: 12px 0 14px; font-size: 12.5px; }
+  #tabs button.on { color: var(--text); font-weight: 600; }
+
+  #overlay { position: fixed; inset: 0; background: var(--overlay); display: none; z-index: 40; overflow-y: auto; padding: 28px 14px 60px; }
+  #overlay.open { display: block; }
+  .sheet { max-width: 500px; margin: 0 auto; background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; }
+  .sheet h2 { font-family: Georgia, serif; font-weight: 400; font-size: 20px; margin-bottom: 6px; }
+  .flab { font-size: 11px; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; display: block; margin: 14px 0 5px; }
+  .fin, select.fin, textarea.fin { width: 100%; border: 1px solid var(--border); background: var(--bg); border-radius: 9px; padding: 9px 11px; font-size: 14.5px; color: var(--text); outline: none; font-family: inherit; }
+  textarea.fin { resize: vertical; min-height: 60px; }
+  .frow { display: flex; gap: 10px; }
+  .frow > * { flex: 1; min-width: 0; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+  .chip { font-size: 12px; padding: 5px 11px; border-radius: 99px; border: 1px solid var(--border); background: var(--bg); color: var(--text); cursor: pointer; font-family: inherit; }
+  .chip:hover { border-color: var(--muted); }
+  .btnrow { display: flex; gap: 10px; margin-top: 20px; align-items: center; }
+  .btn { border: 1px solid var(--border); background: var(--bg); color: var(--text); border-radius: 10px; padding: 9px 16px; font-size: 14px; cursor: pointer; font-family: inherit; }
+  .btn.primary { background: var(--text); color: var(--bg); border-color: var(--text); }
+  .btn.danger { color: #C64B32; border-color: #C64B32; background: transparent; margin-left: auto; }
+  .srow { display: flex; gap: 8px; align-items: center; padding: 5px 0; }
+  .srow input[type=text] { flex: 1; }
+  .srow input[type=color] { width: 34px; height: 34px; border: none; background: none; padding: 0; cursor: pointer; }
+  .srow .x { color: var(--faint); cursor: pointer; font-size: 16px; padding: 0 6px; }
+  .srow .x:hover { color: #C64B32; }
+  .switch { display: flex; align-items: center; gap: 10px; padding: 6px 0; cursor: pointer; font-size: 14.5px; }
+
+  .statnum { font-size: 26px; font-family: Georgia, serif; }
+  .statlbl { font-size: 12px; color: var(--muted); }
+  .bars { display: flex; gap: 8px; align-items: flex-end; height: 56px; margin-top: 8px; }
+  .barcol { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .barcol .b { width: 100%; max-width: 34px; border-radius: 4px 4px 0 0; background: var(--faint); }
+  .barcol .l { font-size: 10px; color: var(--muted); }
+  .habit-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; }
+  .habit-row .name { flex: 1; font-size: 14.5px; cursor: pointer; }
+  .streak { font-size: 11.5px; color: var(--muted); white-space: nowrap; }
+  .drag { color: var(--faint); cursor: grab; font-size: 14px; padding: 2px 6px 2px 0; flex: none; user-select: none; touch-action: none; }
+  .drag:hover { color: var(--text); }
+  .item.dragging { opacity: .55; background: var(--card2); }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <div class="kicker" id="hdrDate"></div>
+    <h1 class="serif" id="hdrTitle">Hoy</h1>
+  </div>
+  <nav class="topnav" id="topnav">
+    <button data-tab="hoy" class="on">Hoy</button>
+    <button data-tab="semana">Semana</button>
+    <button data-tab="radar">Radar</button>
+    <button data-tab="listas">Listas</button>
+    <button data-tab="balance">Balance</button>
+    <button data-act="open-settings">Ajustes</button>
+  </nav>
+</header>
+<div id="view"></div>
+<div id="toast"></div>
+<div id="overlay"><div class="sheet" id="sheet"></div></div>
+<div id="quickbar"><div class="row">
+  <input id="qinput" placeholder="Anotá algo…" autocomplete="off">
+  <button id="qadd">+</button>
+</div></div>
+<nav id="tabs">
+  <button data-tab="hoy" class="on">Hoy</button>
+  <button data-tab="semana">Semana</button>
+  <button data-tab="radar">Radar</button>
+  <button data-tab="listas">Listas</button>
+  <button data-tab="balance">Balance</button>
+  <button data-act="open-settings">Ajustes</button>
+</nav>
+<input type="file" id="importfile" accept=".json" style="display:none">
+
+<script>
+/* === CONFIG (pegar valores de la consola de Firebase) === */
+window.FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCdvCtYmy00Qy8csOSt4VDRfMlh3k7BeoI",
+  authDomain: "mi-semana-6897d.firebaseapp.com",
+  projectId: "mi-semana-6897d",
+  storageBucket: "mi-semana-6897d.firebasestorage.app",
+  messagingSenderId: "886820035157",
+  appId: "1:886820035157:web:d00420f5f6b03e8320d2dc"
+};
+window.VAPID_PUBLIC_KEY = "BH5RxCjRv10wy6sB0UkTTYkFlZmNHaQGm4kXgCXOyOA9lsRjR2QmIOGWG0ScneTvbS4MhaNc87SWrvuIyv02jrE";
+</script>
+<script>
+"use strict";
+const DOW = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
+const DOWA = ["dom","lun","mar","mié","jue","vie","sáb"];
+const MES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+const REPEATS = { none:"no se repite", w:"cada semana", m:"cada mes", y:"cada año" };
+
+let S = null, tab = "hoy", weekOffset = 0, monthOffset = 0, editCtx = null, lastDel = null, dayModalDate = null;
+
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+function pad(n){ return (n<10?"0":"")+n; }
+function dstr(d){ return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
+function fromStr(s){ const p=s.split("-"); return new Date(+p[0], +p[1]-1, +p[2]); }
+function todayStr(){ return dstr(new Date()); }
+function addDays(d,n){ const x=new Date(d); x.setDate(x.getDate()+n); return x; }
+function startOfWeek(d){ const x=new Date(d); const day=(x.getDay()+6)%7; x.setDate(x.getDate()-day); x.setHours(0,0,0,0); return x; }
+function weeksDiff(anchorStr, weekStart){ return Math.round((weekStart - fromStr(anchorStr)) / (7*86400000)); }
+function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;"); }
+function fmtShort(s){ const d=fromStr(s); return DOWA[d.getDay()]+" "+d.getDate()+"/"+(d.getMonth()+1); }
+function addInterval(dateS, type){
+  const d = fromStr(dateS);
+  if(type==="w") return dstr(addDays(d,7));
+  if(type==="m"){ const t=new Date(d.getFullYear(), d.getMonth()+1, 1); const last=new Date(d.getFullYear(), d.getMonth()+2, 0).getDate(); t.setDate(Math.min(d.getDate(), last)); return dstr(t); }
+  if(type==="y"){ const t=new Date(d.getFullYear()+1, d.getMonth(), 1); const last=new Date(d.getFullYear()+1, d.getMonth()+1, 0).getDate(); t.setDate(Math.min(d.getDate(), last)); return dstr(t); }
+  return dateS;
+}
+function catOf(id){ return S.cats.find(c=>c.id===id) || S.cats.find(c=>c.id==="otro") || {id:"otro",name:"Otro",color:"#8A8880"}; }
+
+function defaultCats(){
+  return [
+    {id:"lif", name:"LIF", color:"#E2734A"},
+    {id:"oliver", name:"Oliver", color:"#4E97DF"},
+    {id:"salud", name:"Salud", color:"#2FA981"},
+    {id:"casa", name:"Casa y trámites", color:"#D89320"},
+    {id:"poker", name:"Poker", color:"#8F88E0"},
+    {id:"otro", name:"Otro", color:"#8A8880"}
+  ];
+}
+
+function seed(){
+  const anchor = dstr(startOfWeek(new Date()));
+  return {
+    version: 2,
+    cats: defaultCats(),
+    fixed: [
+      {id:uid(),dow:1,text:"Día de Oliver",time:"",cat:"oliver",freq:"w",anchor,notes:""},
+      {id:uid(),dow:2,text:"Oliver al colegio",time:"07:30",cat:"oliver",freq:"w",anchor,notes:""},
+      {id:uid(),dow:2,text:"Ale (limpieza)",time:"08:30",cat:"casa",freq:"w",anchor,notes:""},
+      {id:uid(),dow:2,text:"Clase LIF",time:"",cat:"lif",freq:"w",anchor,notes:""},
+      {id:uid(),dow:3,text:"Día de Oliver",time:"",cat:"oliver",freq:"2w",anchor,notes:"semana por medio"},
+      {id:uid(),dow:4,text:"Oliver al colegio",time:"07:30",cat:"oliver",freq:"w",anchor,notes:""},
+      {id:uid(),dow:4,text:"Roxana",time:"11:00",cat:"salud",freq:"w",anchor,notes:""},
+      {id:uid(),dow:4,text:"Clase LIF",time:"",cat:"lif",freq:"w",anchor,notes:""},
+      {id:uid(),dow:5,text:"Ale (limpieza)",time:"08:30",cat:"casa",freq:"w",anchor,notes:""},
+      {id:uid(),dow:6,text:"Día de Oliver",time:"",cat:"oliver",freq:"w",anchor,notes:""},
+      {id:uid(),dow:6,text:"Fortnite con los pibes",time:"22:00",cat:"otro",freq:"w",anchor,notes:""}
+    ],
+    fixedLog: {},
+    radar: [
+      {id:uid(),date:"2026-07-08",time:"",text:"Vence ICBC 1,7M",cat:"casa",repeat:"m",done:false,notes:""},
+      {id:uid(),date:"2026-07-23",time:"09:00",text:"Juampi",cat:"salud",repeat:"none",done:false,notes:""},
+      {id:uid(),date:"2026-07-31",time:"",text:"Teatro con Romi ❤️",cat:"otro",repeat:"none",done:false,notes:""},
+      {id:uid(),date:"2026-08-01",time:"",text:"Registro: averiguar",cat:"casa",repeat:"none",done:false,notes:"vence 24/8"},
+      {id:uid(),date:"2026-08-05",time:"09:00",text:"Ergometría",cat:"salud",repeat:"none",done:false,notes:""}
+    ],
+    tasks: [
+      {id:uid(),text:"Turno dentista Oliver",cat:"oliver",done:false,created:todayStr(),pin:false,notes:""},
+      {id:uid(),text:"Turno dentista yo",cat:"salud",done:false,created:todayStr(),pin:false,notes:""},
+      {id:uid(),text:"Reembolso Norton",cat:"casa",done:false,created:todayStr(),pin:false,notes:""},
+      {id:uid(),text:"Tomografía",cat:"salud",done:false,created:todayStr(),pin:false,notes:""},
+      {id:uid(),text:"Luz bajomesada",cat:"casa",done:false,created:todayStr(),pin:false,notes:""}
+    ],
+    someday: [
+      {id:uid(),text:"Portón garage",done:false,notes:""},
+      {id:uid(),text:"Arreglo cloaca",done:false,notes:""},
+      {id:uid(),text:"Celular nuevo",done:false,notes:""},
+      {id:uid(),text:"Cinta y elevador escritorio",done:false,notes:""},
+      {id:uid(),text:"Termotanque",done:false,notes:""},
+      {id:uid(),text:"Extractor aire cocina",done:false,notes:""},
+      {id:uid(),text:"Parrilla nueva",done:false,notes:""},
+      {id:uid(),text:"Operación pierna",done:false,notes:""}
+    ],
+    routine: [
+      {id:"r1",text:"Tomar T4"},
+      {id:"r2",text:"3 respiraciones profundas"},
+      {id:"r3",text:"Abrir persiana / hacer la cama"},
+      {id:"r4",text:"No tocar el celular al despertar"},
+      {id:"r5",text:"Leer algo que no sea basura mental"},
+      {id:"r6",text:"Journaling con objetivos"}
+    ],
+    routineLog: {},
+    habits: [
+      {id:"h1",text:"Gym",color:"#2FA981"},
+      {id:"h2",text:"Dormir antes de la 1",color:"#8F88E0"},
+      {id:"h3",text:"Leer",color:"#D89320"}
+    ],
+    habitLog: {},
+    prios: {},
+    dayNotes: {},
+    discounts: { "1":"20% ICBC en Coto (tope 10k)", "4":"15% Carrefour con Mastercard", "5":"Coto con MercadoPago" },
+    notif: { digest:true, digestTime:"08:00", remind:true, remindMin:30, habits:true, habitsTime:"21:00" },
+    ui: { dark:false }
+  };
+}
+
+function migrateV1(old){
+  const s = seed();
+  const anchor = dstr(startOfWeek(new Date()));
+  if(old.fixed && !Array.isArray(old.fixed)){
+    s.fixed = [];
+    for(const k in old.fixed){
+      for(const f of old.fixed[k]){
+        const bi = /semana por medio/i.test(f.text||"");
+        s.fixed.push({id:f.id||uid(),dow:+k,text:bi?"Día de Oliver":(f.text||""),time:f.time||"",cat:f.cat||"otro",freq:bi?"2w":"w",anchor,notes:bi?"semana por medio":""});
+      }
+    }
+  }
+  if(old.radar) s.radar = old.radar.map(r=>({repeat:"none",notes:"",...r, repeat:/icbc/i.test(r.text||"")?"m":(r.repeat||"none")}));
+  if(old.tasks) s.tasks = old.tasks.map(t=>({pin:false,notes:"",...t}));
+  if(old.someday) s.someday = old.someday.map(t=>({notes:"",...t}));
+  if(old.prios) s.prios = old.prios;
+  if(old.discounts) s.discounts = old.discounts;
+  if(old.routine){
+    const gym = old.routine.find(r=>/gimnasio|gym/i.test(r.text||""));
+    s.routine = old.routine.filter(r=>r!==gym);
+    if(gym && old.routineLog){
+      for(const day in old.routineLog){
+        if(old.routineLog[day][gym.id]){ if(!s.habitLog[day]) s.habitLog[day]={}; s.habitLog[day]["h1"]=true; }
+      }
+    }
+  }
+  if(old.routineLog) s.routineLog = old.routineLog;
+  return s;
+}
+
+function load(){
+  try {
+    const raw2 = localStorage.getItem("miSemanaV2");
+    if(raw2){ S = JSON.parse(raw2); ensureDefaults(); return; }
+    const raw1 = localStorage.getItem("miSemanaV1");
+    if(raw1){ S = migrateV1(JSON.parse(raw1)); save(); return; }
+  } catch(e){}
+  S = seed(); save();
+}
+function save(){
+  localStorage.setItem("miSemanaV2", JSON.stringify(S));
+  localStorage.setItem("miSemanaTs", String(Date.now()));
+  if(window.cloud) window.cloud.queue();
+}
+function ensureDefaults(){
+  if(!S.dayNotes) S.dayNotes = {};
+  if(!S.notif) S.notif = { digest:true, digestTime:"08:00", remind:true, remindMin:30, habits:true, habitsTime:"21:00" };
+}
+function applyTheme(){ document.documentElement.dataset.theme = S.ui.dark ? "dark" : ""; }
+
+function toast(msg, undoable){
+  const t = document.getElementById("toast");
+  t.innerHTML = esc(msg) + (undoable ? ' <span class="undo" data-act="undo">deshacer</span>' : "");
+  t.classList.add("show");
+  clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove("show"), undoable?5000:1700);
+}
+
+function parseInput(raw){
+  let text = raw.trim(); let date = null, time = null;
+  const dm = text.match(/^(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?\s*/);
+  if(dm){
+    const now = new Date();
+    let y = dm[3] ? (+dm[3] < 100 ? 2000 + +dm[3] : +dm[3]) : now.getFullYear();
+    let d = new Date(y, +dm[2]-1, +dm[1]);
+    if(!dm[3] && dstr(d) < todayStr()) d = new Date(y+1, +dm[2]-1, +dm[1]);
+    if(d.getMonth() === +dm[2]-1){ date = dstr(d); text = text.slice(dm[0].length); }
+  }
+  const tm = text.match(/(?:^|\s)(\d{1,2}):(\d{2})(?:\s|$)/);
+  if(tm && +tm[1] < 24 && +tm[2] < 60){
+    time = pad(+tm[1]) + ":" + tm[2];
+    text = (text.slice(0, tm.index) + " " + text.slice(tm.index + tm[0].length)).trim();
+  }
+  return { date, time, text: text.trim() };
+}
+
+function guessCat(text){
+  const t = text.toLowerCase();
+  if(/\b(oliver|oli|colegio|aldosivi)\b/.test(t)) return "oliver";
+  if(/\b(lif|clase|alumno|richard|chris)\b/.test(t)) return "lif";
+  if(/\b(roxana|susana|psic|m[eé]dic|turno|dentista|gym|gimnasio|ergometr|cardi[oó]|otorrino|farmacia|urolog|an[aá]lisis)\b/.test(t)) return "salud";
+  if(/\b(icbc|tarjeta|vence|vto|banco|afip|arca|vtv|registro|tr[aá]mite|plomero|luz|gas|multa)\b/.test(t)) return "casa";
+  if(/\b(grind|mtt|torneo|poker|p[oó]ker|stars|hrc|gto|estudio)\b/.test(t)) return "poker";
+  return "otro";
+}
+
+function occursFixed(f, d){
+  if(f.dow !== d.getDay()) return false;
+  if(f.freq === "2w") return Math.abs(weeksDiff(f.anchor, startOfWeek(d))) % 2 === 0;
+  return true;
+}
+function agendaFor(dateS){
+  const d = fromStr(dateS);
+  const fx = S.fixed.filter(f => occursFixed(f,d)).map(f => ({...f, kind:"fixed"}));
+  const rd = S.radar.filter(r => r.date === dateS).map(r => ({...r, kind:"radar"}));
+  const all = fx.concat(rd);
+  all.sort((a,b) => (a.time||"99:99") > (b.time||"99:99") ? 1 : -1);
+  return all;
+}
+function isDoneOn(it, dateS){
+  if(it.kind === "radar") return !!it.done;
+  return !!(S.fixedLog[dateS] && S.fixedLog[dateS][it.id]);
+}
+
+function rowAgenda(it, dateS, opts){
+  opts = opts || {};
+  const done = isDoneOn(it, dateS);
+  const col = catOf(it.cat).color;
+  const meta = [];
+  if(it.kind === "radar" && it.repeat && it.repeat !== "none") meta.push(REPEATS[it.repeat]);
+  if(it.kind === "fixed" && it.freq === "2w") meta.push("semana por medio");
+  if(it.notes) meta.push(it.notes);
+  return `<div class="item ${done?"done":""}" data-search="${esc(it.text.toLowerCase())}">
+    ${opts.noTime ? "" : `<span class="timecol">${it.time||""}</span>`}
+    <div class="bar" style="background:${col}"></div>
+    ${opts.noCheck ? "" : `<div class="chk ${done?"on":""}" data-act="toggle-agenda" data-kind="${it.kind}" data-id="${it.id}" data-date="${dateS}"></div>`}
+    <div class="body" data-act="edit" data-kind="${it.kind}" data-id="${it.id}">
+      <div class="t">${esc(it.text)}</div>
+      ${meta.length?`<div class="m">${esc(meta.join(" · "))}</div>`:""}
+    </div>
+  </div>`;
+}
+
+function rowTask(t, opts){
+  const drag = opts && opts.drag && !t.done;
+  const meta = [catOf(t.cat).name];
+  if(t.pin) meta.push("fijada arriba");
+  if(t.notes) meta.push(t.notes);
+  return `<div class="item ${t.done?"done":""}" data-search="${esc(t.text.toLowerCase())}" ${drag?`data-did="${t.id}" data-dlist="task"`:""}>
+    ${drag?`<span class="drag">⠿</span>`:""}
+    <div class="bar" style="background:${catOf(t.cat).color}"></div>
+    <div class="chk ${t.done?"on":""}" data-act="toggle-task" data-id="${t.id}"></div>
+    <div class="body" data-act="edit" data-kind="task" data-id="${t.id}">
+      <div class="t">${esc(t.text)}</div><div class="m">${esc(meta.join(" · "))}</div>
+    </div>
+  </div>`;
+}
+function rowSomeday(t, opts){
+  const drag = opts && opts.drag && !t.done;
+  return `<div class="item ${t.done?"done":""}" data-search="${esc(t.text.toLowerCase())}" ${drag?`data-did="${t.id}" data-dlist="someday"`:""}>
+    ${drag?`<span class="drag">⠿</span>`:""}
+    <div class="chk ${t.done?"on":""}" data-act="toggle-someday" data-id="${t.id}"></div>
+    <div class="body" data-act="edit" data-kind="someday" data-id="${t.id}">
+      <div class="t">${esc(t.text)}</div>${t.notes?`<div class="m">${esc(t.notes)}</div>`:""}
+    </div>
+  </div>`;
+}
+function rowRadar(r){
+  const meta = [];
+  if(r.time) meta.push(r.time);
+  if(r.repeat && r.repeat!=="none") meta.push(REPEATS[r.repeat]);
+  if(r.notes) meta.push(r.notes);
+  return `<div class="item ${r.done?"done":""}" data-search="${esc(r.text.toLowerCase())}">
+    <span class="datebadge">${fmtShort(r.date)}</span>
+    <div class="bar" style="background:${catOf(r.cat).color}"></div>
+    <div class="chk ${r.done?"on":""}" data-act="toggle-agenda" data-kind="radar" data-id="${r.id}" data-date="${r.date}"></div>
+    <div class="body" data-act="edit" data-kind="radar" data-id="${r.id}">
+      <div class="t">${esc(r.text)}</div>${meta.length?`<div class="m">${esc(meta.join(" · "))}</div>`:""}
+    </div>
+  </div>`;
+}
+
+function habitStreak(h){
+  let n = 0;
+  let d = new Date();
+  if(!(S.habitLog[todayStr()] && S.habitLog[todayStr()][h.id])) d = addDays(d,-1);
+  while(true){
+    const k = dstr(d);
+    if(S.habitLog[k] && S.habitLog[k][h.id]){ n++; d = addDays(d,-1); } else break;
+    if(n > 999) break;
+  }
+  return n;
+}
+
+function renderHoy(){
+  const now = new Date(), ts = todayStr();
+  const agenda = agendaFor(ts);
+  const tomorrow = dstr(addDays(now,1));
+  const agTom = agendaFor(tomorrow);
+  const disc = S.discounts[String(now.getDay())];
+  const prios = S.prios[ts] || [];
+  const log = S.routineLog[ts] || {};
+  const hlog = S.habitLog[ts] || {};
+  const doneR = S.routine.filter(r => log[r.id]).length;
+  const mon = startOfWeek(now);
+
+  let prioRows = "";
+  for(let i=0;i<3;i++){
+    const p = prios[i];
+    if(p){
+      prioRows += `<div class="item ${p.done?"done":""}">
+        <div class="chk ${p.done?"on":""}" data-act="toggle-prio" data-i="${i}"></div>
+        <div class="body" data-act="toggle-prio" data-i="${i}"><div class="t">${esc(p.text)}</div>${p.taskId?'<div class="m">de pendientes</div>':""}</div>
+        <span class="lnk" data-act="del-prio" data-i="${i}" style="text-decoration:none;color:var(--faint)">×</span>
+      </div>`;
+    } else {
+      prioRows += `<div class="item"><div class="chk" style="border-style:dashed"></div>
+        <div class="body"><input class="inline" data-enter="prio" placeholder="${prios.length===0&&i===0?"¿qué es lo importante hoy?":"…"}"></div></div>`;
+      break;
+    }
+  }
+
+  const openTasks = S.tasks.filter(t=>!t.done);
+  const shown = openTasks.slice(0,6);
+
+  const habitsHtml = S.habits.map(h => {
+    let dots = "";
+    for(let i=0;i<7;i++){
+      const dS = dstr(addDays(mon,i));
+      const on = S.habitLog[dS] && S.habitLog[dS][h.id];
+      dots += `<span class="dot ${on?"on":""} ${dS===ts?"today":""}" style="${on?"background:"+h.color:""}"></span>`;
+    }
+    const st = habitStreak(h);
+    return `<div class="habit-row">
+      <div class="chk ${hlog[h.id]?"on":""}" data-act="toggle-habit" data-id="${h.id}" style="${hlog[h.id]?"background:"+h.color:""}"></div>
+      <span class="name" data-act="toggle-habit" data-id="${h.id}">${esc(h.text)}</span>
+      <span class="dots">${dots}</span>
+      <span class="streak">${st>1?"racha "+st:""}</span>
+    </div>`;
+  }).join("");
+
+  document.getElementById("view").innerHTML = `<div class="cols">
+    <div>
+      <div class="panel">
+        <div class="panel-h"><span>Agenda de hoy</span><span class="lnk" data-act="new-event" data-date="${ts}">+ evento</span></div>
+        ${disc?`<span class="pill">Descuento: ${esc(disc)}</span>`:""}
+        ${agenda.length ? agenda.map(a=>rowAgenda(a,ts)).join("") : `<div class="empty">Día libre de agenda.</div>`}
+      </div>
+      <div class="panel">
+        <div class="panel-h"><span>Mañana · ${DOW[addDays(now,1).getDay()]}</span><span class="lnk" data-act="new-event" data-date="${tomorrow}">+ evento</span></div>
+        ${agTom.length ? agTom.map(a=>rowAgenda(a,tomorrow,{noCheck:true})).join("") : `<div class="empty">Nada por ahora.</div>`}
+      </div>
+      <div class="panel">
+        <div class="panel-h"><span>Nota del día</span><span class="lnk" data-act="past-notes">anteriores</span></div>
+        <textarea class="fin" style="min-height:70px" placeholder="Lo que quieras dejar anotado de hoy…" data-sfield data-skind="daynote" data-sid="${ts}">${esc((S.dayNotes||{})[ts]||"")}</textarea>
+      </div>
+    </div>
+    <div>
+      <div class="panel">
+        <div class="panel-h"><span>Tres cosas de hoy</span><span class="lnk" data-act="pick-tasks">elegir de pendientes</span></div>
+        ${prioRows}
+      </div>
+      <div class="panel">
+        <div class="panel-h"><span>Pendientes</span><span><span class="lnk" data-act="new-task">+ nueva</span> &nbsp; <span class="lnk" data-act="goto" data-tab="listas">ver todas (${openTasks.length})</span></span></div>
+        ${shown.length ? shown.map(rowTask).join("") : `<div class="empty">Nada pendiente. Qué paz.</div>`}
+      </div>
+    </div>
+    <div>
+      <div class="panel">
+        <div class="panel-h"><span>Rutina de la mañana</span><span class="sub">${doneR}/${S.routine.length}</span></div>
+        ${S.routine.map(r => `<div class="item ${log[r.id]?"done":""}">
+          <div class="chk ${log[r.id]?"on":""}" data-act="toggle-routine" data-id="${r.id}"></div>
+          <div class="body" data-act="toggle-routine" data-id="${r.id}"><div class="t">${esc(r.text)}</div></div>
+        </div>`).join("")}
+        <div style="margin-top:6px"><span class="lnk" data-act="open-settings">editar rutina</span></div>
+      </div>
+      <div class="panel">
+        <div class="panel-h"><span>Hábitos</span><span class="sub">esta semana</span></div>
+        ${habitsHtml || `<div class="empty">Sin hábitos. Agregalos en Ajustes.</div>`}
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderSemana(){
+  const mon = startOfWeek(addDays(new Date(), weekOffset*7));
+  const sun = addDays(mon,6);
+  const lbl = `${mon.getDate()} ${MES[mon.getMonth()].slice(0,3)} — ${sun.getDate()} ${MES[sun.getMonth()].slice(0,3)}`;
+  let cards = "";
+  for(let i=0;i<7;i++){
+    const d = addDays(mon,i);
+    const dS = dstr(d);
+    const isToday = dS === todayStr();
+    const ag = agendaFor(dS);
+    cards += `<div class="daycard ${isToday?"today":""}">
+      <h3>${DOW[d.getDay()][0].toUpperCase()+DOW[d.getDay()].slice(1)} <span>${d.getDate()}/${d.getMonth()+1}${isToday?" · hoy":""}</span></h3>
+      ${ag.map(a=>rowAgenda(a,dS)).join("")}
+      <div class="item"><div class="bar" style="background:var(--faint)"></div>
+        <div class="body"><input class="inline" data-enter="day-add" data-date="${dS}" placeholder="+ agregar acá"></div></div>
+    </div>`;
+  }
+  document.getElementById("view").innerHTML = `
+    <div class="weeknav">
+      <button data-act="week-prev">‹</button>
+      <span class="lbl">${lbl}${weekOffset===0?" · actual":""}</span>
+      <button data-act="week-next">›</button>
+      ${weekOffset!==0?`<button data-act="week-today" style="min-width:auto;padding:0 10px;font-size:12px">hoy</button>`:""}
+      <span class="sub" style="margin-left:auto">escribí en un día para sumar algo puntual; empezá con "fijo " para que se repita todas las semanas</span>
+    </div>
+    <div class="semgrid">${cards}</div>`;
+}
+
+function renderRadar(){
+  const ts = todayStr();
+  const cutoff = dstr(addDays(new Date(),-3));
+  const items = S.radar.filter(r => !(r.done && r.date < cutoff))
+    .sort((a,b) => (a.date+(a.time||"")) > (b.date+(b.time||"")) ? 1 : -1);
+  const past = items.filter(r => r.date < ts && !r.done);
+  const rest = items.filter(r => r.date >= ts || r.done);
+
+  let html = "";
+  if(past.length) html += `<div class="panel-h" style="margin-top:4px">Quedaron atrás — ¿las hiciste?</div>` + past.map(r=>rowRadar(r)+`<div class="sub" style="margin:-2px 0 8px 58px">posponer: <span class="lnk" data-act="postpone" data-id="${r.id}" data-days="0">hoy</span> · <span class="lnk" data-act="postpone" data-id="${r.id}" data-days="1">mañana</span> · <span class="lnk" data-act="postpone" data-id="${r.id}" data-days="7">+1 semana</span></div>`).join("") + `<hr class="hr">`;
+  let lastMonth = "";
+  for(const r of rest){
+    const m = MES[fromStr(r.date).getMonth()] + " " + fromStr(r.date).getFullYear();
+    if(m !== lastMonth){ html += `<div class="month-h">${m}</div>`; lastMonth = m; }
+    html += rowRadar(r);
+  }
+  if(!items.length) html = `<div class="empty">Nada en el radar. Anotá abajo con fecha: "5/8 9:00 ergometría".</div>`;
+
+  document.getElementById("view").innerHTML = `
+    ${monthCal()}
+    <input class="filter" data-filter placeholder="buscar en el radar…">
+    <div class="panel"><div class="panel-h"><span>Próximas</span><span class="lnk" data-act="new-radar">+ agregar</span></div>${html}</div>
+    <div class="sub">Tocá cualquier ítem para editarlo: fecha, hora, repetición, notas, categoría.</div>`;
+}
+
+function renderListas(){
+  const cutoff = dstr(addDays(new Date(),-3));
+  const open = S.tasks.filter(t => !t.done);
+  const ordered = open;
+  const recentDone = S.tasks.filter(t => t.done && (t.doneAt||"9999") >= cutoff);
+
+  document.getElementById("view").innerHTML = `
+    <input class="filter" data-filter placeholder="buscar en las listas…">
+    <div class="cols2">
+      <div class="panel">
+        <div class="panel-h"><span>Pendientes (${open.length})</span><span class="lnk" data-act="new-task">+ nueva</span></div>
+        ${ordered.length ? ordered.map(t=>rowTask(t,{drag:true})).join("") : `<div class="empty">Nada pendiente. Qué paz.</div>`}
+        ${recentDone.length ? `<hr class="hr">` + recentDone.map(rowTask).join("") : ""}
+        <div class="sub" style="margin-top:8px">Lo tachado desaparece solo a los 3 días.</div>
+      </div>
+      <div class="panel">
+        <div class="panel-h"><span>Algún día / cuando haya plata</span><span class="lnk" data-act="new-someday">+ nueva</span></div>
+        ${S.someday.filter(t=>!t.done).map(t=>rowSomeday(t,{drag:true})).join("") || `<div class="empty">Vacío.</div>`}
+        ${S.someday.filter(t=>t.done).map(rowSomeday).join("")}
+      </div>
+    </div>`;
+}
+
+function weekStats(offset){
+  const mon = startOfWeek(addDays(new Date(), -7*offset));
+  const from = dstr(mon), to = dstr(addDays(mon,6));
+  const tasksDone = S.tasks.filter(t => t.done && t.doneAt && t.doneAt >= from && t.doneAt <= to).length;
+  const radarDone = S.radar.filter(r => r.done && r.date >= from && r.date <= to).length;
+  let rSum = 0, rDays = 0;
+  const habitCounts = {};
+  for(let i=0;i<7;i++){
+    const dS = dstr(addDays(mon,i));
+    if(dS > todayStr()) break;
+    const log = S.routineLog[dS] || {};
+    if(S.routine.length){ rSum += S.routine.filter(r=>log[r.id]).length / S.routine.length; rDays++; }
+    const hl = S.habitLog[dS] || {};
+    for(const h of S.habits) if(hl[h.id]) habitCounts[h.id] = (habitCounts[h.id]||0)+1;
+  }
+  return { tasksDone, radarDone, routinePct: rDays ? Math.round(rSum/rDays*100) : 0, habitCounts };
+}
+
+function renderBalance(){
+  const w0 = weekStats(0), w1 = weekStats(1);
+  const weeks = [3,2,1,0].map(weekStats);
+  const lbls = ["hace 3","hace 2","pasada","esta"];
+  const maxT = Math.max(1, ...weeks.map(w=>w.tasksDone + w.radarDone));
+
+  const habitsHtml = S.habits.map(h => {
+    const bars = weeks.map((w,i) => {
+      const v = w.habitCounts[h.id]||0;
+      return `<div class="barcol"><div class="b" style="height:${Math.max(4, v/7*52)}px;background:${v?h.color:"var(--faint)"}"></div><div class="l">${lbls[i]}</div></div>`;
+    }).join("");
+    const st = habitStreak(h);
+    return `<div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline">
+        <span style="font-size:14px">${esc(h.text)}</span>
+        <span class="sub">${(weeks[3].habitCounts[h.id]||0)}/7 esta semana${st>1?" · racha "+st:""}</span>
+      </div>
+      <div class="bars">${bars}</div>
+    </div>`;
+  }).join("");
+
+  const taskBars = weeks.map((w,i) => {
+    const v = w.tasksDone + w.radarDone;
+    return `<div class="barcol"><div class="b" style="height:${Math.max(4, v/maxT*52)}px;background:${v?"var(--ok)":"var(--faint)"}"></div><div class="l">${lbls[i]} (${v})</div></div>`;
+  }).join("");
+
+  const diff = w0.tasksDone - w1.tasksDone;
+  document.getElementById("view").innerHTML = `<div class="cols2">
+    <div>
+      <div class="panel">
+        <div class="panel-h"><span>Esta semana</span></div>
+        <div style="display:flex;gap:26px;flex-wrap:wrap">
+          <div><div class="statnum">${w0.tasksDone}</div><div class="statlbl">tareas hechas${diff>0?" (+"+diff+" vs pasada)":""}</div></div>
+          <div><div class="statnum">${w0.radarDone}</div><div class="statlbl">del radar cumplidas</div></div>
+          <div><div class="statnum">${w0.routinePct}%</div><div class="statlbl">rutina de mañana</div></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-h"><span>Tareas + radar por semana</span></div>
+        <div class="bars">${taskBars}</div>
+      </div>
+    </div>
+    <div>
+      <div class="panel">
+        <div class="panel-h"><span>Hábitos, últimas 4 semanas</span></div>
+        ${habitsHtml || `<div class="empty">Sin hábitos aún.</div>`}
+      </div>
+    </div>
+  </div>
+  <div class="sub" style="margin-top:4px">Sin rojo, sin culpa: lo que no se hizo simplemente no suma. La semana que viene arranca de cero.</div>`;
+}
+
+function render(){
+  const now = new Date();
+  document.getElementById("hdrDate").textContent = DOW[now.getDay()]+" "+now.getDate()+" de "+MES[now.getMonth()];
+  const titles = {hoy:"Hoy",semana:"La semana",radar:"Radar",listas:"Listas",balance:"Balance"};
+  document.getElementById("hdrTitle").textContent = titles[tab];
+  if(tab==="hoy") renderHoy();
+  else if(tab==="semana") renderSemana();
+  else if(tab==="radar") renderRadar();
+  else if(tab==="listas") renderListas();
+  else renderBalance();
+  document.querySelectorAll("[data-tab]").forEach(b => b.classList.toggle("on", b.dataset.tab===tab));
+  const q = document.getElementById("qinput");
+  q.placeholder = tab==="radar" ? "5/8 9:00 ergometría" : "Anotá algo… (con fecha va al Radar, con * a Algún día)";
+}
+
+function catOptions(sel){
+  return S.cats.map(c=>`<option value="${c.id}" ${c.id===sel?"selected":""}>${esc(c.name)}</option>`).join("");
+}
+
+function openEditor(kind, id, presets){
+  presets = presets || {};
+  let it = null;
+  if(id){
+    if(kind==="task") it = S.tasks.find(x=>x.id===id);
+    else if(kind==="radar") it = S.radar.find(x=>x.id===id);
+    else if(kind==="someday") it = S.someday.find(x=>x.id===id);
+    else if(kind==="fixed") it = S.fixed.find(x=>x.id===id);
+    if(!it) return;
+  }
+  editCtx = { kind, id };
+  const v = (f, def) => it ? (it[f]!==undefined?it[f]:def) : (presets[f]!==undefined?presets[f]:def);
+  let fields = `<label class="flab">Qué</label><input class="fin" id="f-text" value="${esc(v("text",""))}" autocomplete="off">`;
+
+  if(kind==="radar" || kind==="task" || kind==="someday"){
+    fields += `<div class="frow">
+      <div><label class="flab">Fecha</label><input class="fin" type="date" id="f-date" value="${esc(v("date",""))}"></div>
+      <div><label class="flab">Hora</label><input class="fin" type="time" id="f-time" value="${esc(v("time",""))}"></div>
+    </div>
+    <div class="chips">
+      <button class="chip" data-chip="0">hoy</button>
+      <button class="chip" data-chip="1">mañana</button>
+      <button class="chip" data-chip="7">en una semana</button>
+      <button class="chip" data-chip="30">en un mes</button>
+      <button class="chip" data-chip="clear">sin fecha</button>
+    </div>`;
+  }
+  if(kind==="fixed"){
+    fields += `<div class="frow">
+      <div><label class="flab">Día</label><select class="fin" id="f-dow">${DOW.map((d,i)=>`<option value="${i}" ${i===v("dow",1)?"selected":""}>${d}</option>`).join("")}</select></div>
+      <div><label class="flab">Hora</label><input class="fin" type="time" id="f-time" value="${esc(v("time",""))}"></div>
+    </div>
+    <label class="flab">Frecuencia</label>
+    <select class="fin" id="f-freq">
+      <option value="w" ${v("freq","w")==="w"?"selected":""}>todas las semanas</option>
+      <option value="2w" ${v("freq","w")==="2w"?"selected":""}>semana por medio</option>
+    </select>
+    <label class="flab">Si es semana por medio: ¿toca esta semana?</label>
+    <select class="fin" id="f-par">
+      <option value="si" ${(!it || Math.abs(weeksDiff(v("anchor",dstr(startOfWeek(new Date()))), startOfWeek(new Date())))%2===0)?"selected":""}>sí, esta semana</option>
+      <option value="no" ${(it && Math.abs(weeksDiff(v("anchor",dstr(startOfWeek(new Date()))), startOfWeek(new Date())))%2===1)?"selected":""}>no, la que viene</option>
+    </select>`;
+  }
+  if(kind==="radar"){
+    fields += `<label class="flab">Repetición</label>
+    <select class="fin" id="f-repeat">${Object.keys(REPEATS).map(k=>`<option value="${k}" ${k===v("repeat","none")?"selected":""}>${REPEATS[k]}</option>`).join("")}</select>`;
+  }
+  if(kind!=="someday"){
+    fields += `<label class="flab">Categoría</label><select class="fin" id="f-cat">${catOptions(v("cat","otro"))}</select>`;
+  }
+  if(kind==="task"){
+    fields += `<label class="switch"><input type="checkbox" id="f-pin" ${v("pin",false)?"checked":""}> Fijar arriba de la lista</label>`;
+  }
+  fields += `<label class="flab">Notas</label><textarea class="fin" id="f-notes">${esc(v("notes",""))}</textarea>`;
+
+  const kindNames = {task:"Pendiente",radar:"Radar",someday:"Algún día",fixed:"Fijo semanal"};
+  const hint = kind==="task" ? "Si le ponés fecha, pasa al Radar." : kind==="radar" ? "Si le sacás la fecha, pasa a Pendientes." : kind==="someday" ? "Si le ponés fecha, pasa al Radar." : "";
+
+  document.getElementById("sheet").innerHTML = `
+    <h2>${it?"Editar":"Nuevo"} · ${kindNames[kind]}</h2>
+    ${hint?`<div class="sub">${hint}</div>`:""}
+    ${fields}
+    <div class="btnrow">
+      <button class="btn primary" data-act="save-item">Guardar</button>
+      <button class="btn" data-act="close-modal">Cancelar</button>
+      ${it?`<button class="btn danger" data-act="del-item">Eliminar</button>`:""}
+    </div>`;
+  document.getElementById("overlay").classList.add("open");
+  setTimeout(()=>{ const el=document.getElementById("f-text"); if(el && !it) el.focus(); }, 50);
+}
+
+function closeModal(){ document.getElementById("overlay").classList.remove("open"); editCtx = null; dayModalDate = null; }
+
+function saveEditor(){
+  const g = id => { const el = document.getElementById(id); return el ? el.value : undefined; };
+  const text = (g("f-text")||"").trim();
+  if(!text){ toast("Le falta el texto"); return; }
+  const {kind, id} = editCtx;
+  const date = g("f-date") || "";
+  const time = g("f-time") || "";
+  const cat = g("f-cat") || "otro";
+  const notes = (g("f-notes")||"").trim();
+
+  function removeFrom(kind, id){
+    if(kind==="task") S.tasks = S.tasks.filter(x=>x.id!==id);
+    if(kind==="radar") S.radar = S.radar.filter(x=>x.id!==id);
+    if(kind==="someday") S.someday = S.someday.filter(x=>x.id!==id);
+  }
+
+  if(kind==="fixed"){
+    const base = id ? S.fixed.find(x=>x.id===id) : null;
+    const obj = base || {id:uid(), anchor: dstr(startOfWeek(new Date()))};
+    obj.text=text; obj.time=time; obj.cat=cat; obj.notes=notes;
+    obj.dow = +g("f-dow"); obj.freq = g("f-freq")||"w";
+    if(obj.freq==="2w") obj.anchor = g("f-par")==="no" ? dstr(addDays(startOfWeek(new Date()),7)) : dstr(startOfWeek(new Date()));
+    if(!base) S.fixed.push(obj);
+  }
+  else if(date){
+    const base = (kind==="radar" && id) ? S.radar.find(x=>x.id===id) : null;
+    const obj = base || {id:uid(), done:false};
+    obj.text=text; obj.date=date; obj.time=time; obj.cat=cat; obj.notes=notes;
+    obj.repeat = g("f-repeat") || obj.repeat || "none";
+    if(!base){ if(id) removeFrom(kind, id); S.radar.push(obj); if(kind!=="radar") toast("Pasó al Radar: "+fmtShort(date)); }
+  }
+  else if(kind==="someday"){
+    const base = id ? S.someday.find(x=>x.id===id) : null;
+    const obj = base || {id:uid(), done:false};
+    obj.text=text; obj.notes=notes;
+    if(!base) S.someday.push(obj);
+  }
+  else {
+    const base = (kind==="task" && id) ? S.tasks.find(x=>x.id===id) : null;
+    const obj = base || {id:uid(), done:false, created:todayStr()};
+    obj.text=text; obj.cat=cat; obj.notes=notes;
+    const pinEl = document.getElementById("f-pin");
+    if(pinEl) obj.pin = pinEl.checked;
+    if(!base){ if(id) removeFrom(kind, id); S.tasks.push(obj); if(kind==="radar") toast("Pasó a Pendientes"); }
+    if(obj.pin) S.tasks = [obj].concat(S.tasks.filter(x=>x!==obj));
+  }
+  save(); closeModal(); render();
+}
+
+function deleteFromEditor(){
+  const {kind, id} = editCtx;
+  let obj = null, restore = null;
+  if(kind==="task"){ obj = S.tasks.find(x=>x.id===id); S.tasks = S.tasks.filter(x=>x.id!==id); restore = ()=>S.tasks.push(obj); }
+  if(kind==="radar"){ obj = S.radar.find(x=>x.id===id); S.radar = S.radar.filter(x=>x.id!==id); restore = ()=>S.radar.push(obj); }
+  if(kind==="someday"){ obj = S.someday.find(x=>x.id===id); S.someday = S.someday.filter(x=>x.id!==id); restore = ()=>S.someday.push(obj); }
+  if(kind==="fixed"){ obj = S.fixed.find(x=>x.id===id); S.fixed = S.fixed.filter(x=>x.id!==id); restore = ()=>S.fixed.push(obj); }
+  if(obj){ lastDel = restore; toast("Eliminado", true); }
+  save(); closeModal(); render();
+}
+
+function openPickTasks(){
+  const open = S.tasks.filter(t=>!t.done);
+  document.getElementById("sheet").innerHTML = `
+    <h2>Elegir de pendientes</h2>
+    <div class="sub">Se suman a "Tres cosas de hoy". Al tildarlas, se tachan también en la lista.</div>
+    <div style="margin-top:10px">
+    ${open.length ? open.map(t=>`<div class="item" data-act="pick-task" data-id="${t.id}" style="cursor:pointer">
+      <div class="bar" style="background:${catOf(t.cat).color}"></div>
+      <div class="body"><div class="t">${esc(t.text)}</div></div>
+    </div>`).join("") : `<div class="empty">No hay pendientes abiertas.</div>`}
+    </div>
+    <div class="btnrow"><button class="btn" data-act="close-modal">Cerrar</button></div>`;
+  document.getElementById("overlay").classList.add("open");
+}
+
+function openSettings(){
+  const catRows = S.cats.map(c=>`<div class="srow">
+    <input type="color" value="${c.color}" data-sfield data-skind="cat" data-sid="${c.id}" data-sprop="color">
+    <input type="text" class="fin" value="${esc(c.name)}" data-sfield data-skind="cat" data-sid="${c.id}" data-sprop="name">
+    ${c.id!=="otro"?`<span class="x" data-act="del-cat" data-id="${c.id}">×</span>`:'<span class="x" style="visibility:hidden">×</span>'}
+  </div>`).join("");
+  const rutRows = S.routine.map(r=>`<div class="srow">
+    <input type="text" class="fin" value="${esc(r.text)}" data-sfield data-skind="routine" data-sid="${r.id}" data-sprop="text">
+    <span class="x" data-act="del-routine" data-id="${r.id}">×</span>
+  </div>`).join("");
+  const habRows = S.habits.map(h=>`<div class="srow">
+    <input type="color" value="${h.color}" data-sfield data-skind="habit" data-sid="${h.id}" data-sprop="color">
+    <input type="text" class="fin" value="${esc(h.text)}" data-sfield data-skind="habit" data-sid="${h.id}" data-sprop="text">
+    <span class="x" data-act="del-habit" data-id="${h.id}">×</span>
+  </div>`).join("");
+  const discRows = [1,2,3,4,5,6,0].map(d=>`<div class="srow">
+    <span style="min-width:76px;font-size:13px;color:var(--muted)">${DOW[d]}</span>
+    <input type="text" class="fin" value="${esc(S.discounts[String(d)]||"")}" placeholder="—" data-sfield data-skind="disc" data-sid="${d}" data-sprop="v">
+  </div>`).join("");
+
+  document.getElementById("sheet").innerHTML = `
+    <h2>Ajustes</h2>
+    <label class="flab">Cuenta, sync y avisos</label>
+    ${window.cloud ? window.cloud.settingsHtml() : `<div class="sub">Sync no configurado todavía.</div>`}
+    <label class="switch"><input type="checkbox" id="s-dark" ${S.ui.dark?"checked":""} data-sfield data-skind="ui" data-sid="dark" data-sprop="v"> Modo oscuro</label>
+    <label class="flab">Categorías y colores</label>
+    ${catRows}
+    <div><span class="lnk" data-act="add-cat">+ agregar categoría</span></div>
+    <label class="flab">Rutina de la mañana</label>
+    ${rutRows}
+    <div><span class="lnk" data-act="add-routine">+ agregar paso</span></div>
+    <label class="flab">Hábitos (con racha)</label>
+    ${habRows}
+    <div><span class="lnk" data-act="add-habit">+ agregar hábito</span></div>
+    <label class="flab">Descuentos por día</label>
+    ${discRows}
+    <label class="flab">Datos</label>
+    <div class="chips">
+      <button class="chip" data-act="export">exportar copia</button>
+      <button class="chip" data-act="import">importar</button>
+      <button class="chip" data-act="reset" style="color:#C64B32">borrar todo</button>
+    </div>
+    <div class="btnrow"><button class="btn primary" data-act="close-modal">Listo</button></div>`;
+  document.getElementById("overlay").classList.add("open");
+}
+
+function monthCal(){
+  const now = new Date();
+  const base = new Date(now.getFullYear(), now.getMonth()+monthOffset, 1);
+  const y = base.getFullYear(), m = base.getMonth();
+  const daysIn = new Date(y, m+1, 0).getDate();
+  const firstDow = (base.getDay()+6)%7;
+  let cells = "";
+  for(let i=0;i<firstDow;i++) cells += `<div></div>`;
+  for(let d=1; d<=daysIn; d++){
+    const dS = dstr(new Date(y,m,d));
+    const ag = agendaFor(dS);
+    const dots = ag.slice(0,4).map(it=>`<span class="cdot" style="background:${catOf(it.cat).color}"></span>`).join("");
+    cells += `<div class="cday ${dS===todayStr()?"ctoday":""}" data-act="day-detail" data-date="${dS}"><span>${d}</span><div class="cdots">${dots}</div></div>`;
+  }
+  const hdr = DOWA.slice(1).concat([DOWA[0]]).map(d=>`<div class="chd">${d}</div>`).join("");
+  return `<div class="panel">
+    <div class="weeknav" style="margin-bottom:8px">
+      <button data-act="month-prev">‹</button>
+      <span class="lbl">${MES[m]} ${y}</span>
+      <button data-act="month-next">›</button>
+      ${monthOffset!==0?`<button data-act="month-today" style="min-width:auto;padding:0 10px;font-size:12px">hoy</button>`:""}
+      <span class="sub" style="margin-left:auto">tocá un día para ver o agregar</span>
+    </div>
+    <div class="calgrid">${hdr}${cells}</div>
+  </div>`;
+}
+
+function openDayModal(dateS){
+  dayModalDate = dateS;
+  const d = fromStr(dateS);
+  const ag = agendaFor(dateS);
+  document.getElementById("sheet").innerHTML = `
+    <h2>${DOW[d.getDay()]} ${d.getDate()} de ${MES[d.getMonth()]}</h2>
+    <div style="margin-top:8px">
+    ${ag.length ? ag.map(a=>rowAgenda(a,dateS)).join("") : `<div class="empty">Nada ese día.</div>`}
+    </div>
+    <div class="btnrow">
+      <button class="btn primary" data-act="new-event" data-date="${dateS}">+ evento</button>
+      <button class="btn" data-act="close-modal">Cerrar</button>
+    </div>`;
+  document.getElementById("overlay").classList.add("open");
+}
+
+function openPastNotes(){
+  const notes = S.dayNotes || {};
+  const keys = Object.keys(notes).filter(k=>notes[k] && notes[k].trim()).sort().reverse().slice(0,14);
+  document.getElementById("sheet").innerHTML = `
+    <h2>Notas de los últimos días</h2>
+    ${keys.length ? keys.map(k=>`<div style="margin-top:12px"><div class="kicker">${fmtShort(k)}</div><div style="font-size:14px;white-space:pre-wrap">${esc(notes[k])}</div></div>`).join("") : `<div class="empty">Todavía no hay notas.</div>`}
+    <div class="btnrow"><button class="btn" data-act="close-modal">Cerrar</button></div>`;
+  document.getElementById("overlay").classList.add("open");
+}
+
+function commitDrag(list){
+  const ids = Array.from(document.querySelectorAll('#view [data-dlist="'+list+'"]')).map(el=>el.dataset.did);
+  if(!ids.length) return;
+  if(list==="task"){
+    const vis = ids.map(i=>S.tasks.find(t=>t.id===i)).filter(Boolean);
+    const rest = S.tasks.filter(t=>!ids.includes(t.id));
+    S.tasks = vis.concat(rest);
+  } else {
+    const vis = ids.map(i=>S.someday.find(t=>t.id===i)).filter(Boolean);
+    const rest = S.someday.filter(t=>!ids.includes(t.id));
+    S.someday = vis.concat(rest);
+  }
+  save(); render();
+}
+
+function quickAdd(){
+  const q = document.getElementById("qinput");
+  let raw = q.value.trim();
+  if(!raw) return;
+  let target = "tasks";
+  if(raw.startsWith("*")){ target = "someday"; raw = raw.slice(1).trim(); }
+  const p = parseInput(raw);
+  if(!p.text){ toast("Le falta el texto"); return; }
+  if(p.date){
+    S.radar.push({id:uid(),date:p.date,time:p.time||"",text:p.text,cat:guessCat(p.text),repeat:"none",done:false,notes:""});
+    toast("→ Radar: " + fmtShort(p.date));
+  } else if(target==="someday"){
+    S.someday.push({id:uid(),text:p.text,done:false,notes:""});
+    toast("→ Algún día");
+  } else {
+    S.tasks.push({id:uid(),text:p.text,cat:guessCat(p.text),done:false,created:todayStr(),pin:false,notes:""});
+    toast("→ Pendientes");
+  }
+  q.value = "";
+  save(); render();
+}
+
+document.addEventListener("click", e => {
+  const chip = e.target.closest("[data-chip]");
+  if(chip){
+    const f = document.getElementById("f-date");
+    if(f) f.value = chip.dataset.chip==="clear" ? "" : dstr(addDays(new Date(), +chip.dataset.chip));
+    return;
+  }
+  const tb = e.target.closest("button[data-tab]");
+  if(tb){ tab = tb.dataset.tab; weekOffset = 0; monthOffset = 0; render(); window.scrollTo(0,0); return; }
+  if(e.target.id === "overlay"){ closeModal(); return; }
+
+  const el = e.target.closest("[data-act]");
+  if(!el) return;
+  const act = el.dataset.act, id = el.dataset.id;
+  const ts = todayStr();
+
+  if(act==="edit"){ openEditor(el.dataset.kind, id); return; }
+  if(act==="day-detail"){ openDayModal(el.dataset.date); return; }
+  if(act==="past-notes"){ openPastNotes(); return; }
+  if(act==="new-task"){ openEditor("task", null); return; }
+  if(act==="new-someday"){ openEditor("someday", null); return; }
+  if(act==="new-radar"){ openEditor("radar", null, {date: todayStr()}); return; }
+  if(act==="new-event"){ openEditor("radar", null, {date: el.dataset.date}); return; }
+  if(act==="open-settings"){ openSettings(); return; }
+  if(act==="close-modal"){ closeModal(); return; }
+  if(act==="save-item"){ saveEditor(); return; }
+  if(act==="del-item"){ deleteFromEditor(); return; }
+  if(act==="pick-tasks"){ openPickTasks(); return; }
+  if(act==="cloud-login"){ if(window.cloud) window.cloud.login(); return; }
+  if(act==="cloud-logout"){ if(window.cloud) window.cloud.logout(); return; }
+  if(act==="push-enable"){ if(window.cloud) window.cloud.enablePush(); return; }
+  if(act==="push-test"){ if(window.cloud) window.cloud.testPush(); return; }
+  if(act==="goto"){ tab = el.dataset.tab; render(); window.scrollTo(0,0); return; }
+  if(act==="export"){
+    const blob = new Blob([JSON.stringify(S,null,2)], {type:"application/json"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "mi-semana-" + ts + ".json";
+    a.click();
+    return;
+  }
+  if(act==="import"){ document.getElementById("importfile").click(); return; }
+  if(act==="reset"){
+    if(el.dataset.armed){ localStorage.removeItem("miSemanaV2"); localStorage.removeItem("miSemanaV1"); S = seed(); save(); applyTheme(); closeModal(); render(); toast("Todo borrado, arrancamos de cero"); }
+    else { el.dataset.armed = "1"; el.textContent = "¿seguro? tocá de nuevo"; }
+    return;
+  }
+  if(act==="undo"){
+    if(lastDel){ lastDel(); lastDel = null; save(); render(); toast("Restaurado"); }
+    return;
+  }
+
+  if(act==="toggle-agenda"){
+    const kind = el.dataset.kind, dateS = el.dataset.date;
+    if(kind==="radar"){
+      const r = S.radar.find(x=>x.id===id);
+      if(r){
+        r.done = !r.done;
+        if(r.done && r.repeat && r.repeat!=="none"){
+          S.radar.push({...r, id:uid(), date:addInterval(r.date, r.repeat), done:false});
+          r.repeat = "none";
+          toast("Se repite: creé la próxima");
+        }
+      }
+    } else {
+      if(!S.fixedLog[dateS]) S.fixedLog[dateS] = {};
+      S.fixedLog[dateS][id] = !S.fixedLog[dateS][id];
+    }
+  }
+  else if(act==="toggle-task"){ const t=S.tasks.find(x=>x.id===id); if(t){ t.done=!t.done; t.doneAt=t.done?ts:null;
+    for(const day in S.prios) for(const p of S.prios[day]) if(p.taskId===id) p.done = t.done; } }
+  else if(act==="toggle-someday"){ const t=S.someday.find(x=>x.id===id); if(t) t.done=!t.done; }
+  else if(act==="toggle-routine"){ if(!S.routineLog[ts]) S.routineLog[ts]={}; S.routineLog[ts][id]=!S.routineLog[ts][id]; }
+  else if(act==="toggle-habit"){ if(!S.habitLog[ts]) S.habitLog[ts]={}; S.habitLog[ts][id]=!S.habitLog[ts][id]; }
+  else if(act==="toggle-prio"){ const p=(S.prios[ts]||[])[+el.dataset.i]; if(p){ p.done=!p.done;
+    if(p.taskId){ const t=S.tasks.find(x=>x.id===p.taskId); if(t){ t.done=p.done; t.doneAt=p.done?ts:null; } } } }
+  else if(act==="del-prio"){ (S.prios[ts]||[]).splice(+el.dataset.i,1); }
+  else if(act==="pick-task"){
+    const t = S.tasks.find(x=>x.id===id);
+    if(t){ if(!S.prios[ts]) S.prios[ts]=[];
+      if(S.prios[ts].length>=3){ toast("Ya hay tres. Menos es más."); return; }
+      S.prios[ts].push({text:t.text,done:false,taskId:t.id}); }
+    save(); closeModal(); render(); return;
+  }
+  else if(act==="week-prev"){ weekOffset--; }
+  else if(act==="week-next"){ weekOffset++; }
+  else if(act==="week-today"){ weekOffset = 0; }
+  else if(act==="month-prev"){ monthOffset--; }
+  else if(act==="month-next"){ monthOffset++; }
+  else if(act==="month-today"){ monthOffset = 0; }
+  else if(act==="postpone"){ const r=S.radar.find(x=>x.id===id); if(r) r.date = dstr(addDays(new Date(), +el.dataset.days)); }
+  else if(act==="add-cat"){ S.cats.push({id:uid(),name:"Nueva",color:"#8A8880"}); save(); openSettings(); return; }
+  else if(act==="del-cat"){
+    S.cats = S.cats.filter(c=>c.id!==id);
+    for(const t of S.tasks) if(t.cat===id) t.cat="otro";
+    for(const r of S.radar) if(r.cat===id) r.cat="otro";
+    for(const f of S.fixed) if(f.cat===id) f.cat="otro";
+    save(); openSettings(); return;
+  }
+  else if(act==="add-routine"){ S.routine.push({id:uid(),text:"Nuevo paso"}); save(); openSettings(); return; }
+  else if(act==="del-routine"){ S.routine = S.routine.filter(r=>r.id!==id); save(); openSettings(); return; }
+  else if(act==="add-habit"){ S.habits.push({id:uid(),text:"Nuevo hábito",color:"#2FA981"}); save(); openSettings(); return; }
+  else if(act==="del-habit"){ S.habits = S.habits.filter(h=>h.id!==id); save(); openSettings(); return; }
+  else return;
+  save(); render();
+  if(dayModalDate) openDayModal(dayModalDate);
+});
+
+document.addEventListener("change", e => {
+  const el = e.target.closest("[data-sfield]");
+  if(!el) return;
+  const kind = el.dataset.skind, sid = el.dataset.sid, prop = el.dataset.sprop;
+  if(kind==="cat"){ const c=S.cats.find(x=>x.id===sid); if(c) c[prop]=el.value; }
+  else if(kind==="routine"){ const r=S.routine.find(x=>x.id===sid); if(r) r[prop]=el.value; }
+  else if(kind==="habit"){ const h=S.habits.find(x=>x.id===sid); if(h) h[prop]=el.value; }
+  else if(kind==="disc"){ S.discounts[sid]=el.value; }
+  else if(kind==="notif"){ S.notif[sid] = el.type==="checkbox" ? el.checked : (el.type==="number" ? +el.value : el.value); }
+  else if(kind==="daynote"){ if(!S.dayNotes) S.dayNotes={}; S.dayNotes[sid]=el.value; save(); return; }
+  else if(kind==="ui" && sid==="dark"){ S.ui.dark = el.checked; applyTheme(); }
+  save();
+  if(!document.getElementById("overlay").classList.contains("open")) render();
+});
+
+document.addEventListener("keydown", e => {
+  if(e.key === "Escape" && document.getElementById("overlay").classList.contains("open")){ closeModal(); return; }
+  if(e.key === "/" && !/INPUT|TEXTAREA|SELECT/.test(e.target.tagName||"")){ e.preventDefault(); document.getElementById("qinput").focus(); return; }
+  if(e.key !== "Enter") return;
+  const el = e.target.closest ? e.target.closest("[data-enter]") : null;
+  if(!el) return;
+  const val = el.value.trim();
+  if(!val) return;
+  const ts = todayStr();
+  if(el.dataset.enter==="prio"){
+    if(!S.prios[ts]) S.prios[ts]=[];
+    S.prios[ts].push({text:val,done:false});
+  }
+  else if(el.dataset.enter==="day-add"){
+    const dateS = el.dataset.date;
+    if(/^fijo\s+/i.test(val)){
+      const p = parseInput(val.replace(/^fijo\s+/i,""));
+      S.fixed.push({id:uid(),dow:fromStr(dateS).getDay(),text:p.text,time:p.time||"",cat:guessCat(p.text),freq:"w",anchor:dstr(startOfWeek(fromStr(dateS))),notes:""});
+      toast("Fijo semanal creado");
+    } else {
+      const p = parseInput(val);
+      S.radar.push({id:uid(),date:p.date||dateS,time:p.time||"",text:p.text,cat:guessCat(p.text),repeat:"none",done:false,notes:""});
+    }
+  }
+  else return;
+  save(); render();
+});
+
+document.addEventListener("input", e => {
+  if(!e.target.matches("input.filter")) return;
+  const q = e.target.value.toLowerCase().trim();
+  document.querySelectorAll("#view [data-search]").forEach(row => {
+    row.style.display = !q || row.dataset.search.includes(q) ? "" : "none";
+  });
+});
+
+let dragState = null;
+document.addEventListener("pointerdown", e => {
+  const h = e.target.closest ? e.target.closest(".drag") : null;
+  if(!h) return;
+  const row = h.closest("[data-dlist]");
+  if(!row) return;
+  e.preventDefault();
+  dragState = { list: row.dataset.dlist, el: row };
+  row.classList.add("dragging");
+  row.style.pointerEvents = "none";
+});
+document.addEventListener("pointermove", e => {
+  if(!dragState) return;
+  e.preventDefault();
+  const over = document.elementFromPoint(e.clientX, e.clientY);
+  const target = over && over.closest ? over.closest('[data-dlist="'+dragState.list+'"]') : null;
+  if(!target || target === dragState.el) return;
+  const r = target.getBoundingClientRect();
+  const before = e.clientY < r.top + r.height/2;
+  target.parentNode.insertBefore(dragState.el, before ? target : target.nextSibling);
+}, {passive:false});
+document.addEventListener("pointerup", () => {
+  if(!dragState) return;
+  dragState.el.classList.remove("dragging");
+  dragState.el.style.pointerEvents = "";
+  const list = dragState.list; dragState = null;
+  commitDrag(list);
+});
+
+document.getElementById("importfile").addEventListener("change", e => {
+  const f = e.target.files[0];
+  if(!f) return;
+  const rd = new FileReader();
+  rd.onload = () => {
+    try {
+      const data = JSON.parse(rd.result);
+      if(!data.tasks || !data.radar) throw new Error("formato");
+      S = data.version===2 ? data : migrateV1(data); ensureDefaults();
+      save(); applyTheme(); closeModal(); render(); toast("Datos importados");
+    } catch(err){ toast("No pude leer ese archivo"); }
+  };
+  rd.readAsText(f);
+  e.target.value = "";
+});
+
+document.getElementById("qadd").addEventListener("click", quickAdd);
+document.getElementById("qinput").addEventListener("keydown", e => { if(e.key==="Enter") quickAdd(); });
+
+load();
+applyTheme();
+render();
+if("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(()=>{});
+/* Mi semana v3 — sync + push */
+</script>
+<script type="module">
+(async () => {
+const cfg = window.FIREBASE_CONFIG || {};
+if(!cfg.apiKey || cfg.apiKey === "PEGAR_AQUI") return;
+let fbApp, fbAuth, fbFs;
+try {
+  fbApp  = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+  fbAuth = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
+  fbFs   = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+} catch(e){ console.warn("Sin conexión para cargar Firebase", e); return; }
+
+const app  = fbApp.initializeApp(cfg);
+const auth = fbAuth.getAuth(app);
+const db   = fbFs.initializeFirestore(app, { localCache: fbFs.persistentLocalCache() });
+
+const deviceId = (() => {
+  let d = localStorage.getItem("miSemanaDevice");
+  if(!d){ d = Math.random().toString(36).slice(2,10); localStorage.setItem("miSemanaDevice", d); }
+  return d;
+})();
+const localTs = () => +(localStorage.getItem("miSemanaTs") || 0);
+function urlB64(base64){
+  const pad = "=".repeat((4 - base64.length % 4) % 4);
+  const raw = atob((base64 + pad).replace(/-/g, "+").replace(/_/g, "/"));
+  return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+}
+
+let user = null, unsub = null, timer = null, applying = false, pushOn = false;
+
+function refreshBox(){
+  const b = document.getElementById("syncbox");
+  if(b) b.innerHTML = boxInner();
+}
+
+function pushUi(){
+  if(!("Notification" in window) || !("PushManager" in window))
+    return `<div class="sub">Este navegador no soporta avisos. En iPhone: primero agregá la app a la pantalla de inicio.</div>`;
+  if(!pushOn)
+    return `<div class="btnrow" style="margin-top:6px"><button class="btn" data-act="push-enable">Activar avisos en este dispositivo</button></div>`;
+  const N = S.notif;
+  return `
+    <label class="switch"><input type="checkbox" ${N.digest?"checked":""} data-sfield data-skind="notif" data-sid="digest"> Agenda del día a la mañana (incluye radar)</label>
+    <div class="frow" style="align-items:center;margin:2px 0 6px"><span class="sub" style="flex:2">hora del resumen</span><input class="fin" type="time" value="${N.digestTime}" data-sfield data-skind="notif" data-sid="digestTime"></div>
+    <label class="switch"><input type="checkbox" ${N.remind?"checked":""} data-sfield data-skind="notif" data-sid="remind"> Aviso antes de cada evento con hora</label>
+    <div class="frow" style="align-items:center;margin:2px 0 6px"><span class="sub" style="flex:2">minutos antes</span><input class="fin" type="number" min="5" max="120" step="5" value="${N.remindMin}" data-sfield data-skind="notif" data-sid="remindMin"></div>
+    <label class="switch"><input type="checkbox" ${N.habits?"checked":""} data-sfield data-skind="notif" data-sid="habits"> Empujón de hábitos a la noche</label>
+    <div class="frow" style="align-items:center;margin:2px 0 6px"><span class="sub" style="flex:2">hora del empujón</span><input class="fin" type="time" value="${N.habitsTime}" data-sfield data-skind="notif" data-sid="habitsTime"></div>
+    <div class="chips" style="margin-top:6px"><button class="chip" data-act="push-test">probar aviso</button></div>
+    <div class="sub" style="margin-top:6px">Los avisos pueden llegar con unos minutos de demora.</div>`;
+}
+
+function boxInner(){
+  if(!user) return `<div class="sub">Conectate para ver lo mismo en el celu y la PC, con avisos.</div>
+    <div class="btnrow" style="margin-top:8px"><button class="btn primary" data-act="cloud-login">Conectar con Google</button></div>`;
+  return `<div style="font-size:14px">${esc(user.email||"")} <span class="sub">· ${cloud.status}</span> · <span class="lnk" data-act="cloud-logout">salir</span></div>` + pushUi();
+}
+
+const cloud = {
+  status: "conectando…",
+  settingsHtml(){ return `<div id="syncbox">${boxInner()}</div>`; },
+  queue(){
+    if(applying || !user) return;
+    clearTimeout(timer);
+    timer = setTimeout(() => cloud.pushNow(), 1200);
+  },
+  async pushNow(){
+    if(!user) return;
+    let t = localTs();
+    if(!t){ t = Date.now(); localStorage.setItem("miSemanaTs", String(t)); }
+    try {
+      await fbFs.setDoc(fbFs.doc(db, "users", user.uid),
+        { json: JSON.stringify(S), ts: t, device: deviceId, email: user.email || "" }, { merge: true });
+      cloud.status = "sincronizado"; refreshBox();
+    } catch(e){ cloud.status = "error al guardar"; refreshBox(); }
+  },
+  async login(){
+    try { await fbAuth.signInWithPopup(auth, new fbAuth.GoogleAuthProvider()); }
+    catch(e){
+      if(e && (e.code === "auth/popup-blocked" || e.code === "auth/operation-not-supported-in-this-environment")){
+        try { await fbAuth.signInWithRedirect(auth, new fbAuth.GoogleAuthProvider()); } catch(e2){ toast("No pude abrir el login"); }
+      } else if(e && e.code !== "auth/popup-closed-by-user") toast("No pude conectar con Google");
+    }
+  },
+  async logout(){ await fbAuth.signOut(auth); toast("Sesión cerrada. Tus datos siguen en este dispositivo."); },
+  async enablePush(){
+    try {
+      if(window.VAPID_PUBLIC_KEY.startsWith("__")){ toast("Faltan las claves de avisos"); return; }
+      const perm = await Notification.requestPermission();
+      if(perm !== "granted"){ toast("El navegador no dio permiso"); return; }
+      const reg = await navigator.serviceWorker.ready;
+      let sub = await reg.pushManager.getSubscription();
+      if(!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlB64(window.VAPID_PUBLIC_KEY) });
+      const key = sub.endpoint.split("/").pop().replace(/[^a-zA-Z0-9_-]/g, "").slice(-60) || deviceId;
+      await fbFs.setDoc(fbFs.doc(db, "users", user.uid),
+        { subs: { [key]: { sub: JSON.stringify(sub), ua: navigator.userAgent.slice(0, 80), ts: Date.now() } } }, { merge: true });
+      pushOn = true; refreshBox(); toast("Avisos activados en este dispositivo");
+    } catch(e){ console.warn(e); toast("No pude activar los avisos"); }
+  },
+  async testPush(){
+    const reg = await navigator.serviceWorker.ready;
+    reg.showNotification("Mi semana", { body: "Así se van a ver los avisos 👌", icon: "./icon-192.png" });
+  }
+};
+window.cloud = cloud;
+
+function startSync(){
+  unsub = fbFs.onSnapshot(fbFs.doc(db, "users", user.uid), snap => {
+    const d = snap.data();
+    if(!d || !d.json){ cloud.pushNow(); return; }
+    if(d.device === deviceId){ cloud.status = "sincronizado"; refreshBox(); return; }
+    if((d.ts || 0) <= localTs()){ cloud.status = "sincronizado"; refreshBox(); cloud.queue(); return; }
+    applying = true;
+    try {
+      S = JSON.parse(d.json);
+      ensureDefaults();
+      localStorage.setItem("miSemanaV2", d.json);
+      localStorage.setItem("miSemanaTs", String(d.ts));
+      applyTheme(); render();
+      cloud.status = "sincronizado"; refreshBox();
+    } catch(e){ console.warn(e); }
+    applying = false;
+  }, () => { cloud.status = "sin conexión"; refreshBox(); });
+}
+
+fbAuth.onAuthStateChanged(auth, u => {
+  user = u;
+  if(unsub){ unsub(); unsub = null; }
+  if(u){ cloud.status = "conectando…"; startSync(); }
+  else cloud.status = "desconectado";
+  refreshBox();
+});
+
+if("serviceWorker" in navigator && "PushManager" in window){
+  navigator.serviceWorker.ready.then(reg => reg.pushManager.getSubscription()).then(s => { pushOn = !!s; refreshBox(); }).catch(() => {});
+}
+})();
+</script>
+</body>
+</html>
